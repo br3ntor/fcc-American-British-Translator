@@ -142,7 +142,7 @@ function translateBA(sentence) {
 
   // Iterate over american-to-british-titles
   for (let title in americanToBritishTitles) {
-    const re = new RegExp(americanToBritishTitles[title] + "\\b", "i");
+    const re = new RegExp(americanToBritishTitles[title] + "(?=\\s)", "i");
     if (re.test(translatedStr)) {
       const matched = translatedStr.match(re)[0];
       const capitalizedTitle = title[0].toUpperCase() + title.slice(1);
