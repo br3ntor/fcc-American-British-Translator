@@ -10,10 +10,8 @@ const dropdown = document.getElementById("locale-select");
 const translatedSentence = document.getElementById("translated-sentence");
 const errorMessage = document.getElementById("error-msg");
 
-// textInput.value = "Can you toss this in the trashcan for me?";
-textInput.value = "We watched the footie match for a while.";
-// "Mangoes are my favorite fruit.";
-// "Mr. Bobby, could you sneaker stop light and then it goes trash?";
+textInput.value =
+  "Mangoes are my favorite fruit. Can you toss this in the trashcan for me?";
 
 clearButton.addEventListener("click", clearButtonHandler);
 translateButton.addEventListener("click", translateHandler);

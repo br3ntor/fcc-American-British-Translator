@@ -22,7 +22,7 @@ suite("Unit Tests", () => {
     });
   });
 
-  suite("Function translateAB()", () => {
+  suite("Functions translateAB() and translateBA()", () => {
     suite("American to British English", () => {
       test("Mangoes are my favorite fruit. --> Mangoes are my favourite fruit.", (done) => {
         const input = "Mangoes are my favorite fruit.";
