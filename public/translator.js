@@ -107,7 +107,7 @@ function translate(sentence) {
     if (word.slice(-1) === ".") {
       wordRegex = new RegExp(word.slice(0, -1) + "\\.(?=\\s|$)", "gi");
     } else {
-      wordRegex = new RegExp(word + "\\b", "gi");
+      wordRegex = new RegExp("\\b" + word + "\\b", "gi");
     }
 
     if (wordRegex.test(sentence)) {
