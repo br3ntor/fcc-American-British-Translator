@@ -132,13 +132,13 @@ function translate(sentence) {
   for (let word in britishDictionary) {
     let newWord = britishDictionary[word];
 
-    // To preserve casing of the title
-    if (britishDictionary[word].slice(-1) === ".") {
-      newWord = newWord[0].toUpperCase() + newWord.slice(1);
-    }
-
     const wordRegex = new RegExp(word + "(?=\\s|\\.$)", "gi");
     if (wordRegex.test(sentence)) {
+      if (newWord.slice(-1) === ".") {
+        const amerTitle = sentence.match(wordRegex)[0] + ".";
+        newWord = amerTitle;
+      }
+
       american = american.replace(wordRegex, newWord);
       americanHtmlStr = americanHtmlStr.replace(
         wordRegex,
