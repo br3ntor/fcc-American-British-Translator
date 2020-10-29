@@ -1,7 +1,3 @@
-// Final version
-// I don't know why, but I couldn't decide on the best way to structure this project
-// I wrote three different variations. I think I should study the input more carefully
-// I am moving on though since I am sick of it for now and I can pass all the tests
 import { americanOnly } from "./american-only.js";
 import { britishOnly } from "./british-only.js";
 import { americanToBritishSpelling } from "./american-to-british-spelling.js";
@@ -34,20 +30,20 @@ function translateHandler(event) {
     return;
   }
 
-  const t = translate(textInput.value);
-
   let translated = false;
 
   if (dropdown.value === "american-to-british") {
-    translatedSentence.innerHTML = t.htmlB;
+    let abResult = translateAB(textInput.value);
+    translatedSentence.innerHTML = abResult.htmlStr;
 
     // If they are not equal, a translation HAS occurred
-    translated = t.brit !== t.htmlB;
+    translated = abResult.translatedStr !== abResult.htmlStr;
   }
 
   if (dropdown.value === "british-to-american") {
-    translatedSentence.innerHTML = t.htmlA;
-    translated = t.amer !== t.htmlA;
+    let baResult = translateBA(textInput.value);
+    translatedSentence.innerHTML = baResult.htmlStr;
+    translated = baResult.translatedStr !== baResult.htmlStr;
   }
 
   if (!translated) {
@@ -59,101 +55,111 @@ function highlightWord(word) {
   return `<span class="highlight">${word}</span>`;
 }
 
-function flipObj(obj) {
-  return Object.assign(
-    {},
-    ...Object.entries(obj).map(([a, b]) => ({ [b]: a }))
-  );
-}
+function translateAB(sentence) {
+  let translatedStr = sentence;
+  let htmlStr = sentence;
 
-function translate(sentence) {
-  let british = sentence;
-  let american = sentence;
-  let britishHtmlStr = sentence;
-  let americanHtmlStr = sentence;
-
-  // Combine some of the objects, was just easier to deal with titles separately
-  const americanDictionary = {
-    ...americanOnly,
-    ...americanToBritishSpelling,
-    ...americanToBritishTitles,
-  };
-
-  const britishDictionary = {
-    ...britishOnly,
-    ...flipObj(americanToBritishSpelling),
-    ...flipObj(americanToBritishTitles),
-  };
-
-  // British time
-  if (/\d+:\d+/.test(british)) {
-    const match = british.match(/\d+:\d+/)[0];
-    const newTime = match.replace(":", ".");
-    british = british.replace(match, newTime);
-    britishHtmlStr = britishHtmlStr.replace(match, highlightWord(newTime));
-  }
-
-  // American time
-  if (/\d+\.\d+/.test(american)) {
-    const match = american.match(/\d+\.\d+/)[0];
-    const newTime = match.replace(".", ":");
-    american = american.replace(match, newTime);
-    americanHtmlStr = americanHtmlStr.replace(match, highlightWord(newTime));
-  }
-
-  for (let word in americanDictionary) {
-    // Create regex for title or regular word/phrase
-    let wordRegex;
-    if (word.slice(-1) === ".") {
-      wordRegex = new RegExp(word.slice(0, -1) + "\\.(?=\\s|$)", "gi");
-    } else {
-      wordRegex = new RegExp("\\b" + word + "\\b", "gi");
-    }
-
-    if (wordRegex.test(sentence)) {
-      // If title with . at the end, copy match and remove dot to preserve case if capitalized
-      if (word.slice(-1) === ".") {
-        const britishTitle = sentence.match(wordRegex)[0].slice(0, -1);
-        british = british.replace(wordRegex, britishTitle);
-        britishHtmlStr = britishHtmlStr.replace(
-          wordRegex,
-          highlightWord(britishTitle)
-        );
-      } else {
-        british = british.replace(wordRegex, americanDictionary[word]);
-        britishHtmlStr = britishHtmlStr.replace(
-          wordRegex,
-          highlightWord(americanDictionary[word])
-        );
-      }
+  // Iterate over american-only
+  for (let word in americanOnly) {
+    const re = new RegExp(word + "\\b", "i");
+    if (re.test(translatedStr)) {
+      const matched = translatedStr.match(re)[0];
+      translatedStr = translatedStr.replace(matched, americanOnly[word]);
+      htmlStr = htmlStr.replace(matched, highlightWord(americanOnly[word]));
     }
   }
 
-  for (let word in britishDictionary) {
-    let newWord = britishDictionary[word];
-
-    const wordRegex = new RegExp(word + "(?=\\s|\\.$)", "gi");
-    if (wordRegex.test(sentence)) {
-      if (newWord.slice(-1) === ".") {
-        const amerTitle = sentence.match(wordRegex)[0] + ".";
-        newWord = amerTitle;
-      }
-
-      american = american.replace(wordRegex, newWord);
-      americanHtmlStr = americanHtmlStr.replace(
-        wordRegex,
-        highlightWord(newWord)
+  // Iterate over american-to-british-spelling
+  for (let word in americanToBritishSpelling) {
+    if (translatedStr.includes(word)) {
+      translatedStr = translatedStr.replace(
+        word,
+        americanToBritishSpelling[word]
+      );
+      htmlStr = htmlStr.replace(
+        word,
+        highlightWord(americanToBritishSpelling[word])
       );
     }
   }
 
-  return {
-    orig: sentence,
-    brit: british,
-    amer: american,
-    htmlA: americanHtmlStr,
-    htmlB: britishHtmlStr,
-  };
+  // Iterate over american-to-british-titles
+  // This differs from the b2a equivalent codeblock
+  // below which I think is a better approach...
+  for (let title in americanToBritishTitles) {
+    if (translatedStr.toLowerCase().includes(title)) {
+      const re = new RegExp(title, "i");
+      const matched = translatedStr.match(re)[0];
+      const capitalizedTitle =
+        americanToBritishTitles[title][0].toUpperCase() +
+        americanToBritishTitles[title].slice(1);
+      translatedStr = translatedStr.replace(matched, capitalizedTitle);
+      htmlStr = htmlStr.replace(matched, highlightWord(capitalizedTitle));
+    }
+  }
+
+  // Change time delimiter thingy
+  if (/\d+:\d+/.test(translatedStr)) {
+    const match = translatedStr.match(/\d+:\d+/)[0];
+    const newTime = match.replace(":", ".");
+    translatedStr = translatedStr.replace(match, newTime);
+    htmlStr = htmlStr.replace(match, highlightWord(newTime));
+  }
+
+  return { translatedStr, htmlStr };
+}
+
+function translateBA(sentence) {
+  let translatedStr = sentence;
+  let htmlStr = sentence;
+
+  // Iterate over british-only
+  for (let word in britishOnly) {
+    const re = new RegExp("(\\s|^)" + word + "\\b", "i");
+    if (re.test(translatedStr)) {
+      const matched = translatedStr.match(re)[0];
+      translatedStr = translatedStr.replace(matched.trim(), britishOnly[word]);
+      htmlStr = htmlStr.replace(
+        matched.trim(),
+        highlightWord(britishOnly[word])
+      );
+    }
+  }
+
+  // Iterate over british-to-american-spelling
+  for (let word in americanToBritishSpelling) {
+    if (translatedStr.includes(americanToBritishSpelling[word])) {
+      translatedStr = translatedStr.replace(
+        americanToBritishSpelling[word],
+        word
+      );
+      htmlStr = htmlStr.replace(
+        americanToBritishSpelling[word],
+        highlightWord(word)
+      );
+    }
+  }
+
+  // Iterate over american-to-british-titles
+  for (let title in americanToBritishTitles) {
+    const re = new RegExp(americanToBritishTitles[title] + "(?=\\s)", "i");
+    if (re.test(translatedStr)) {
+      const matched = translatedStr.match(re)[0];
+      const capitalizedTitle = title[0].toUpperCase() + title.slice(1);
+      translatedStr = translatedStr.replace(matched, capitalizedTitle);
+      htmlStr = htmlStr.replace(matched, highlightWord(capitalizedTitle));
+    }
+  }
+
+  // Change time delimiter thingy
+  if (/\d+.\d+/.test(translatedStr)) {
+    const match = translatedStr.match(/\d+.\d+/)[0];
+    const newTime = match.replace(".", ":");
+    translatedStr = translatedStr.replace(match, newTime);
+    htmlStr = htmlStr.replace(match, highlightWord(newTime));
+  }
+
+  return { translatedStr, htmlStr };
 }
 
 /* 
@@ -163,8 +169,9 @@ function translate(sentence) {
 */
 try {
   module.exports = {
+    translateAB,
+    translateBA,
     translateHandler,
     clearButtonHandler,
-    translate,
   };
 } catch (e) {}
