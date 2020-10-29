@@ -147,7 +147,6 @@ function translate(sentence) {
     }
   }
 
-  // return { british, american, britishHtmlStr, americanHtmlStr };
   return {
     orig: sentence,
     brit: british,

@@ -70,7 +70,9 @@ function translate(sentence) {
     ...Object.entries(britishOnly).map(([a, b]) => ({ [b]: a }))
   );
 
-  // This isn't going to work because the "only" dicts cant be combined
+  // **********************************************************************
+  // **This isn't going to work because the "only" dicts cant be combined**
+  // **********************************************************************
   // Combine some of the objects, was just easier to deal with titles separately
   const dictionary = {
     ...americanOnly,
